@@ -28,10 +28,10 @@ namespace getAll_PPT
     public class Analys
     {
         #region 全局变量
-        public static int paperID = 169;
-        public static int stuID = 0;
-        public static string docName = "E:/新建 Microsoft PowerPoint 演示文稿.pptx";//"E:/PPT演示文稿.pptx";
-        public static string savePath = "E:/analysFile";
+        private static int paperID = 169;
+        private static int stuID = 0;
+        private static string docName = "E:/PPT演示文稿.pptx";
+        private static string savePath = "E:/analysFile/";
 
         //public static string mySelectQueryWtree = "select * from W_TREE where ID = \'-1\'";
         //public static string mySelectQueryWtreeAttrs = "select * from W_TREE_ATTRS where ID = \'-1\'";
@@ -44,37 +44,44 @@ namespace getAll_PPT
         //public static DataSet Wtree;
         //public static DataSet WtreeAttrs;
 
-        public int rootID = 0;
-        public String fileNodeName;
-        public String xmlFileName;
-        public int attrID = 0;
+        private int rootID = 0;
+        private String fileNodeName;
+        private String xmlFileName;
+        private int attrID = 0;
+        private int imageIndex = 0;
         //public String nodeID;
         //public String attrID;
         //文件名编号
-        public int c_slides = 0;
-        public int c_notesSlides = 0;
-        public int c_slideMasters = 0;
-        public int c_notesMasters = 0;
-        public int c_theme = 0;
-        public int c_slideLayouts = 0;
-        public int c_presentationPr = 0;
-        public int c_tblStyleLst = 0;
-        public int c_viewPr = 0;
-        public int c_handoutMaster = 0;
+        private int c_slides = 0;
+        private int c_notesSlides = 0;
+        private int c_slideMasters = 0;
+        private int c_notesMasters = 0;
+        private int c_theme = 0;
+        private int c_slideLayouts = 0;
+        private int c_presentationPr = 0;
+        private int c_tblStyleLst = 0;
+        private int c_viewPr = 0;
+        private int c_handoutMaster = 0;
 
-        public static XmlDocument docNode = new XmlDocument();
-        public static XmlElement RootNode = docNode.CreateElement("Root");
-        public static XmlDocument docAttr = new XmlDocument();
-        public static XmlElement RootAttr = docAttr.CreateElement("Root");
+        private static XmlDocument docNode = null;
+        private static XmlElement RootNode = null;
+        private static XmlDocument docAttr = null;
+        private static XmlElement RootAttr = null;
         #endregion
 
         #region 解析接口
         public void analys()
         {
-            docNode.AppendChild(docNode.CreateXmlDeclaration("1.0", "utf-8", ""));
-            docAttr.AppendChild(docAttr.CreateXmlDeclaration("1.0", "utf-8", ""));
+            docNode = new XmlDocument();
+            RootNode = docNode.CreateElement("Root");
+            docAttr = new XmlDocument();
+            RootAttr = docAttr.CreateElement("Root");
             docNode.AppendChild(RootNode);
             docAttr.AppendChild(RootAttr);
+
+            XmlElement totalScore = docAttr.CreateElement("totalScore");
+            totalScore.InnerText = "0";
+            RootAttr.AppendChild(totalScore);
             //OracleConnection oracleConn = getOracleConn("localhost", "1521", "orcl", "root", "root");
             //try
             //{
@@ -170,7 +177,7 @@ namespace getAll_PPT
                         int CurrentRootID = rootID;
                         if (p.RootElement != null)
                         {
-                            getAttribute(p.RootElement, 2, c_slides, slideID, "slide/" + xmlFileName + "/", c_slides);
+                            getAttribute(p.RootElement, 2, c_slides, slideID, "slide/" + xmlFileName + "/", c_slides, p);
                         }
                         if (p.Parts.Count() > 0)
                         {
@@ -179,7 +186,7 @@ namespace getAll_PPT
                             //addRow_Wtree("关联", "rId", CurrentRootID+1, ++rootID, "slide/" + xmlFileName + "/rId", "1", "", 3, 7, "0");
                             for (wi = 1; wi <= p.Parts.Count(); wi++)
                             {
-                                writeAttrToXML(++attrID, 0, "rId" + wi, p.GetPartById("rId" + wi).Uri.ToString(), "slide/" + xmlFileName + "/rId" + wi, "0", "0");
+                                writeAttrToXML(++attrID, 0, "rId" + wi, p.GetPartById("rId" + wi).Uri.ToString(), "slide/" + xmlFileName + "/rId" + wi, "0", "0", "null");
                                 //addRow_WtreeAttrs("rId" + wi, p.GetPartById("rId" + wi).Uri.ToString(), "slide/" + xmlFileName + "/rId" + wi, "0", "0", 0, 3, 7);
                             }
                         }
@@ -187,19 +194,19 @@ namespace getAll_PPT
                         {
                             writeNodeToXML(++rootID, ++CurrentRootID, "幻灯片版式", "", "slide/" + xmlFileName + "/slideLayout/", "false");
                             //addRow_Wtree("幻灯片版式", "slideLayout", ++CurrentRootID, ++rootID, "slide/" + xmlFileName + "/slideLayout/", "0", "", 3, 7, "0");
-                            getAttribute(p.SlideLayoutPart.RootElement, 3, 7, rootID, "slide/" + xmlFileName + "/slideLayout/", 1);
+                            getAttribute(p.SlideLayoutPart.RootElement, 3, 7, rootID, "slide/" + xmlFileName + "/slideLayout/", 1, null);
                         }
                         if (p.NotesSlidePart != null && p.NotesSlidePart.RootElement != null)
                         {
                             writeNodeToXML(++rootID, CurrentRootID, "备注幻灯片", "", "slide/" + xmlFileName + "/notesSlide/", "false");
                             //addRow_Wtree("备注幻灯片", "notesSlide", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/notesSlide/", "0", "", 3, 8, "0");
-                            getAttribute(p.NotesSlidePart.RootElement, 3, 8, rootID, "slide/" + xmlFileName + "/notesSlide/", 1);
+                            getAttribute(p.NotesSlidePart.RootElement, 3, 8, rootID, "slide/" + xmlFileName + "/notesSlide/", 1, null);
                         }
                         if (p.SlideCommentsPart != null && p.SlideCommentsPart.RootElement != null)
                         {
                             writeNodeToXML(++rootID, CurrentRootID, "幻灯片批注", "", "slide/" + xmlFileName + "/slideComments/", "false");
                             //addRow_Wtree("幻灯片批注", "slideComment", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/slideComments/", "0", "", 3, 9, "0");
-                            getAttribute(p.SlideCommentsPart.RootElement, 3, 9, rootID, "slide/" + xmlFileName + "/slideComments/", 1);
+                            getAttribute(p.SlideCommentsPart.RootElement, 3, 9, rootID, "slide/" + xmlFileName + "/slideComments/", 1, null);
                         }
                         if (p.ChartParts.Count() > 0)
                         {
@@ -211,7 +218,7 @@ namespace getAll_PPT
                                 {
                                     writeNodeToXML(++rootID, CurrentRootID, "图表空间", "", "slide/" + xmlFileName + "/chartSpace/", "false");
                                     //addRow_Wtree("图表空间", "chartSpace", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/chartSpace/", "0", "", 3, 10, "0");
-                                    getAttribute(chartPart.RootElement, 3, 10, rootID, "slide/" + xmlFileName + "/chartSpace/", ++chartPartCount);
+                                    getAttribute(chartPart.RootElement, 3, 10, rootID, "slide/" + xmlFileName + "/chartSpace/", ++chartPartCount, null);
                                 }
                                 //图表样式
                                 Hashtable hashTable = new Hashtable();
@@ -229,7 +236,7 @@ namespace getAll_PPT
                                     }
                                     writeNodeToXML(++rootID, CurrentRootID, "图标样式", "", "slide/" + xmlFileName + "/chartStyle/", "false");
                                     //addRow_Wtree("图表样式", "stylePart", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/chartStyle/", "0", "", 4, (int)hashTable[stylePart.RootElement.ToString()], "0");
-                                    getAttribute(stylePart.RootElement, 4, (int)hashTable[stylePart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/chartStyle/", (int)hashTable[stylePart.RootElement.ToString()]);
+                                    getAttribute(stylePart.RootElement, 4, (int)hashTable[stylePart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/chartStyle/", (int)hashTable[stylePart.RootElement.ToString()], null);
                                 }
                                 //图表
                                 hashTable.Clear();
@@ -248,7 +255,7 @@ namespace getAll_PPT
                                     }
                                     writeNodeToXML(++rootID, CurrentRootID, "图标颜色风格", "", "slide/" + xmlFileName + "/chartColorStyle/", "false");
                                     //addRow_Wtree("图表颜色风格", "colorStylePart", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/chartColorStyle/", "0", "", 4, (int)hashTable[colorStylePart.RootElement.ToString()], "0");
-                                    getAttribute(colorStylePart.RootElement, 4, (int)hashTable[colorStylePart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/chartColorStyle/", (int)hashTable[colorStylePart.RootElement.ToString()]);
+                                    getAttribute(colorStylePart.RootElement, 4, (int)hashTable[colorStylePart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/chartColorStyle/", (int)hashTable[colorStylePart.RootElement.ToString()], null);
                                 }
                                 //图表图片
                                 if (chartPart.ChartDrawingPart != null && chartPart.ChartDrawingPart.RootElement != null)
@@ -276,7 +283,7 @@ namespace getAll_PPT
                                 }
                                 writeNodeToXML(++rootID, CurrentRootID, "示意图颜色映射", "", "slide/" + xmlFileName + "/diagramColors/", "false");
                                 //addRow_Wtree("示意图颜色映射", "diagramColorsPart", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/diagramColors/", "0", "", 4, (int)hashTable[diagramColorsPart.RootElement.ToString()], "0");
-                                getAttribute(diagramColorsPart.RootElement, 4, (int)hashTable[diagramColorsPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramColors/", (int)hashTable[diagramColorsPart.RootElement.ToString()]);
+                                getAttribute(diagramColorsPart.RootElement, 4, (int)hashTable[diagramColorsPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramColors/", (int)hashTable[diagramColorsPart.RootElement.ToString()], null);
                             }
                         }
                         if (p.DiagramDataParts.Count() > 0)
@@ -296,7 +303,7 @@ namespace getAll_PPT
                                 }
                                 writeNodeToXML(++rootID, CurrentRootID, "示意图数据", "", "slide/" + xmlFileName + "/diagramData/", "false");
                                 //addRow_Wtree("示意图数据", "diagramDataPart", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/diagramData/", "0", "", 4, (int)hashTable[diagramDataPart.RootElement.ToString()], "0");
-                                getAttribute(diagramDataPart.RootElement, 4, (int)hashTable[diagramDataPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramData/", (int)hashTable[diagramDataPart.RootElement.ToString()]);
+                                getAttribute(diagramDataPart.RootElement, 4, (int)hashTable[diagramDataPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramData/", (int)hashTable[diagramDataPart.RootElement.ToString()], null);
                             }
                         }
                         if (p.DiagramStyleParts.Count() > 0)
@@ -316,7 +323,7 @@ namespace getAll_PPT
                                 }
                                 writeNodeToXML(++rootID, CurrentRootID, "示意图样式", "", "slide/" + xmlFileName + "/diagramStyle/", "false");
                                 //addRow_Wtree("示意图样式", "diagramStylePart", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/diagramStyle/", "0", "", 4, (int)hashTable[diagramStylePart.RootElement.ToString()], "0");
-                                getAttribute(diagramStylePart.RootElement, 4, (int)hashTable[diagramStylePart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramStyle/", (int)hashTable[diagramStylePart.RootElement.ToString()]);
+                                getAttribute(diagramStylePart.RootElement, 4, (int)hashTable[diagramStylePart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramStyle/", (int)hashTable[diagramStylePart.RootElement.ToString()], null);
                             }
                         }
                         if (p.DiagramPersistLayoutParts.Count() > 0)
@@ -336,7 +343,7 @@ namespace getAll_PPT
                                 }
                                 writeNodeToXML(++rootID, CurrentRootID, "示意图保存样式", "", "slide/" + xmlFileName + "/diagramPersistLayout/", "false");
                                 //addRow_Wtree("示意图保存样式", "diagramPersistLayoutPart", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/diagramPersistLayout/", "0", "", 4, (int)hashTable[diagramPersistLayoutPart.RootElement.ToString()], "0");
-                                getAttribute(diagramPersistLayoutPart.RootElement, 4, (int)hashTable[diagramPersistLayoutPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramPersistLayout/", (int)hashTable[diagramPersistLayoutPart.RootElement.ToString()]);
+                                getAttribute(diagramPersistLayoutPart.RootElement, 4, (int)hashTable[diagramPersistLayoutPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramPersistLayout/", (int)hashTable[diagramPersistLayoutPart.RootElement.ToString()], null);
                             }
                         }
                         if (p.DiagramLayoutDefinitionParts.Count() > 0)
@@ -356,7 +363,7 @@ namespace getAll_PPT
                                 }
                                 writeNodeToXML(++rootID, CurrentRootID, "示意图样式定义", "", "slide/" + xmlFileName + "/diagramLayoutDefinition/", "false");
                                 //addRow_Wtree("示意图样式定义", "diagramPersistLayoutPart", CurrentRootID, ++rootID, "slide/" + xmlFileName + "/diagramLayoutDefinition/", "0", "", 4, (int)hashTable[diagramLayoutDefinitionPart.RootElement.ToString()], "0");
-                                getAttribute(diagramLayoutDefinitionPart.RootElement, 4, (int)hashTable[diagramLayoutDefinitionPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramLayoutDefinition/", (int)hashTable[diagramLayoutDefinitionPart.RootElement.ToString()]);
+                                getAttribute(diagramLayoutDefinitionPart.RootElement, 4, (int)hashTable[diagramLayoutDefinitionPart.RootElement.ToString()], rootID, "slide/" + xmlFileName + "/diagramLayoutDefinition/", (int)hashTable[diagramLayoutDefinitionPart.RootElement.ToString()], null);
                             }
                         }
                     }
@@ -370,7 +377,7 @@ namespace getAll_PPT
                         if (p.RootElement != null)
                         {
                             int CurrentRootID = rootID + 1;
-                            getAttribute(p.RootElement, 2, c_slideMasters, slideMasterID, "slideMaster/" + xmlFileName + "/", c_slideMasters);
+                            getAttribute(p.RootElement, 2, c_slideMasters, slideMasterID, "slideMaster/" + xmlFileName + "/", c_slideMasters, null);
                             if (p.Parts.Count() > 0)
                             {
                                 int wi;
@@ -378,7 +385,7 @@ namespace getAll_PPT
                                 //addRow_Wtree("关联", "slideLayout", CurrentRootID, ++rootID, "slideMaster/" + xmlFileName + "/" + "rId", "1", "", 4, 1, "0");
                                 for (wi = 1; wi <= p.Parts.Count(); wi++)
                                 {
-                                    writeAttrToXML(++attrID, 0, "rId" + wi, p.GetPartById("rId" + wi).Uri.ToString(), "slideMaster/" + xmlFileName + "/" + "rId" + wi, "0", "0");
+                                    writeAttrToXML(++attrID, 0, "rId" + wi, p.GetPartById("rId" + wi).Uri.ToString(), "slideMaster/" + xmlFileName + "/" + "rId" + wi, "0", "0", "null");
                                     //addRow_WtreeAttrs("rId" + wi, p.GetPartById("rId" + wi).Uri.ToString(), "slideMaster/" + xmlFileName + "/" + "rId" + wi, "0", "0", 0, 4, 1);
                                 }
                             }
@@ -391,7 +398,7 @@ namespace getAll_PPT
                         NotesMasterPart p = (NotesMasterPart)part;
                         if (p.RootElement != null)
                         {
-                            getAttribute(p.RootElement, 2, c_notesMasters, notesMasterID, "notesMaster/" + xmlFileName + "/", c_notesMasters);
+                            getAttribute(p.RootElement, 2, c_notesMasters, notesMasterID, "notesMaster/" + xmlFileName + "/", c_notesMasters, null);
                         }
                     }
                     else if (fileNodeName == "theme")
@@ -401,7 +408,7 @@ namespace getAll_PPT
                         ThemePart p = (ThemePart)part;
                         if (p.RootElement != null)
                         {
-                            getAttribute(p.RootElement, 2, c_theme, themeID, "theme/" + xmlFileName + "/", c_theme);
+                            getAttribute(p.RootElement, 2, c_theme, themeID, "theme/" + xmlFileName + "/", c_theme, null);
                         }
                     }
                     else if (fileNodeName == "presentationPr")
@@ -411,7 +418,7 @@ namespace getAll_PPT
                         PresentationPropertiesPart p = (PresentationPropertiesPart)part;
                         if (p.RootElement != null)
                         {
-                            getAttribute(p.RootElement, 2, c_presentationPr, presentationPrID, "presentationProperties/" + xmlFileName + "/", c_presentationPr);
+                            getAttribute(p.RootElement, 2, c_presentationPr, presentationPrID, "presentationProperties/" + xmlFileName + "/", c_presentationPr, null);
                         }
                     }
                     else if (fileNodeName == "tblStyleLst")
@@ -420,7 +427,7 @@ namespace getAll_PPT
                         TableStylesPart p = (TableStylesPart)part;
                         if (p.RootElement != null)
                         {
-                            getAttribute(p.RootElement, 2, c_tblStyleLst, tblStyleLstID, "tableStyleList/", c_tblStyleLst);
+                            getAttribute(p.RootElement, 2, c_tblStyleLst, tblStyleLstID, "tableStyleList/", c_tblStyleLst, null);
                         }
                     }
                     else if (fileNodeName == "viewPr")
@@ -429,7 +436,7 @@ namespace getAll_PPT
                         ViewPropertiesPart p = (ViewPropertiesPart)part;
                         if (p.RootElement != null)
                         {
-                            getAttribute(p.RootElement, 2, c_viewPr, viewPrID, "viewProperties/", c_viewPr);
+                            getAttribute(p.RootElement, 2, c_viewPr, viewPrID, "viewProperties/", c_viewPr, null);
                         }
                     }
                     else if (fileNodeName == "handoutMaster")
@@ -438,7 +445,7 @@ namespace getAll_PPT
                         HandoutMasterPart p = (HandoutMasterPart)part;
                         if (p.RootElement != null)
                         {
-                            getAttribute(p.RootElement, 2, c_handoutMaster, handoutMasterID, "handoutMaster/", c_handoutMaster);
+                            getAttribute(p.RootElement, 2, c_handoutMaster, handoutMasterID, "handoutMaster/", c_handoutMaster, null);
                         }
                     }
                 }
@@ -446,7 +453,7 @@ namespace getAll_PPT
 
                 #region Presentation.xml
                 int curID = rootID + 1;
-                getAttribute(ppt.PresentationPart.Presentation.PresentationPart.RootElement, 2, 1, presentationID, "presentation/", 1);
+                getAttribute(ppt.PresentationPart.Presentation.PresentationPart.RootElement, 2, 1, presentationID, "presentation/", 1, null);
                 if (ppt.PresentationPart.Presentation.PresentationPart.Parts.Count() > 0)
                 {
                     writeNodeToXML(++rootID, curID, "关联", "", "presentation/rId", "true");
@@ -454,7 +461,7 @@ namespace getAll_PPT
                     int wi;
                     for (wi = 1; wi <= ppt.PresentationPart.Presentation.PresentationPart.Parts.Count(); wi++)
                     {
-                        writeAttrToXML(++attrID, 0, "rId" + wi, ppt.PresentationPart.Presentation.PresentationPart.GetPartById("rId" + wi).Uri.ToString(), "presentation/rId" + wi, "0", "0");
+                        writeAttrToXML(++attrID, 0, "rId" + wi, ppt.PresentationPart.Presentation.PresentationPart.GetPartById("rId" + wi).Uri.ToString(), "presentation/rId" + wi, "0", "0", "null");
                         //addRow_WtreeAttrs("rId" + wi, ppt.PresentationPart.Presentation.PresentationPart.GetPartById("rId" + wi).Uri.ToString(), "presentation/rId" + wi, "0", "0", 0, 3, 1);
                     }
                 }
@@ -465,7 +472,7 @@ namespace getAll_PPT
                 //#endregion
 
                 #region ExtendedFileProperties部分
-                getAttribute(ppt.ExtendedFilePropertiesPart.Properties, 2, 1, extendedFilePropertiesID, "extendedFileProperties/", 1);
+                getAttribute(ppt.ExtendedFilePropertiesPart.Properties, 2, 1, extendedFilePropertiesID, "extendedFileProperties/", 1, null);
                 #endregion
 
                 //#region Thumbnail部分
@@ -476,7 +483,7 @@ namespace getAll_PPT
         #endregion
 
         #region 获取所有属性
-        public void getAttribute(OpenXmlElement element, int depth, int serial, int fatherID, String prefix, int nodeCount)
+        public void getAttribute(OpenXmlElement element, int depth, int serial, int fatherID, String prefix, int nodeCount, SlidePart thisSlide)
         {
             depth++;
             rootID++;
@@ -489,6 +496,20 @@ namespace getAll_PPT
             if (hasChildren && !hasAttributes)
             {
                 writeNodeToXML(thisID, fatherID, get_typeName(element.GetType().ToString()) + nodeCount, element.InnerText, prefix, "false");
+                //判断是否是图片
+                if (element.LocalName == "pic")
+                {
+                    ImagePart imagePart = (ImagePart)thisSlide.GetPartById(element.GetFirstChild<BlipFill>().Blip.Embed);
+                    System.Drawing.Image img = System.Drawing.Image.FromStream(imagePart.GetStream());
+                    imageIndex++;
+                    String fileName = savePath + paperID + stuID + rootID + "image" + imageIndex + ".gif";
+                    img.Save(fileName, System.Drawing.Imaging.ImageFormat.Gif);
+                    writeAttrToXML(++attrID, 0, "资源文件", fileName, prefix, "0", "0", "null");
+                }
+                else if (element.LocalName == "transition")
+                {
+                    writeAttrToXML(++attrID, 0, "切换效果", element.LocalName, prefix + "/" + element.FirstChild.LocalName + "1/", "0", "0", "0");
+                }
                 //addRow_Wtree(get_typeName(element.GetType().ToString())+nodeCount, get_typeName(element.GetType().ToString()), fatherID, thisID, prefix, "0", element.InnerText, depth, serial, "0");
                 //Console.WriteLine("节点名：{0}\t节点ID：{1}\t父ID：{2}\t深度：{3}\t级：{4}\t前缀：{5}", element.LocalName, thisID, fatherID, depth, serial, prefix);
                 int serial_child = 1;
@@ -505,7 +526,7 @@ namespace getAll_PPT
                     {
                         hashTable.Add(e.LocalName, 1);
                     }
-                    getAttribute(e, depth, serial_child, thisID, prefix, (int)hashTable[e.LocalName]);
+                    getAttribute(e, depth, serial_child, thisID, prefix, (int)hashTable[e.LocalName], thisSlide);
                     serial_child++;
                 }
                 return;
@@ -514,7 +535,7 @@ namespace getAll_PPT
             else if (!hasAttributes && !hasChildren)
             {
                 writeNodeToXML(thisID, fatherID, get_typeName(element.GetType().ToString()) + nodeCount, element.InnerText, prefix, "true");
-                writeAttrToXML(+attrID, 0, element.LocalName, element.InnerText, prefix, "0", "0");
+                writeAttrToXML(+attrID, 0, element.LocalName, element.InnerText, prefix, "0", "0", "null");
                 //addRow_Wtree(get_typeName(element.GetType().ToString()) + nodeCount, get_typeName(element.GetType().ToString()), fatherID, thisID, prefix, "1", element.InnerText, depth, serial, "0");
                 //addRow_WtreeAttrs(element.LocalName, element.InnerText, prefix, "0", "0", 0, depth, serial);
                 //Console.WriteLine("节点名：{0}\t文字内容：{1}\t节点ID：{2}\t父ID：{3}\t深度：{4}\t级：{5}\t前缀：{5}", element.LocalName, element.InnerText, thisID, fatherID, depth, serial, prefix);
@@ -523,12 +544,16 @@ namespace getAll_PPT
             //如果此节点有属性且有子节点
             else if (hasAttributes && hasChildren)
             {
+                if (element.LocalName == "transition")
+                {
+                    writeAttrToXML(++attrID, 0, "切换效果", element.LocalName, prefix + element.FirstChild.LocalName + "1/", "0", "0", "null");
+                }
                 writeNodeToXML(thisID, fatherID, get_typeName(element.GetType().ToString()) + nodeCount, element.InnerText, prefix, "false");
                 //addRow_Wtree(get_typeName(element.GetType().ToString())+nodeCount, get_typeName(element.GetType().ToString()), fatherID, thisID, prefix, "0", element.InnerText, depth, serial, "0");
                 //Console.WriteLine("节点名：{0}\t节点ID：{1}\t父ID：{2}\t深度：{3}\t级：{4}\t前缀：{5}", element.LocalName, thisID, fatherID, depth, serial, prefix);
                 foreach (OpenXmlAttribute attr in element.GetAttributes())
                 {
-                    writeAttrToXML(++attrID, 0, attr.LocalName, attr.Value, prefix, "0", "0");
+                    writeAttrToXML(++attrID, 0, attr.LocalName, attr.Value, prefix, "0", "0", "null");
                     //addRow_WtreeAttrs(attr.LocalName, attr.Value, prefix, "0", "0", 0, depth, serial);
                     //Console.WriteLine("节点名：{0}\t属性：{1}\t属性值：{2}\t节点ID：{3}\t父ID：{4}\t深度：{5}\t级：{6}\t前缀：{7}", element.LocalName, attr.LocalName, attr.Value, thisID, fatherID, depth, serial, prefix);
                 }
@@ -546,7 +571,7 @@ namespace getAll_PPT
                     {
                         hashTable.Add(e.LocalName, 1);
                     }
-                    getAttribute(e, depth, serial_child, thisID, prefix, (int)hashTable[e.LocalName]);
+                    getAttribute(e, depth, serial_child, thisID, prefix, (int)hashTable[e.LocalName], thisSlide);
                     serial_child++;
                 }
                 return;
@@ -559,7 +584,7 @@ namespace getAll_PPT
                 //Console.WriteLine("节点名：{0}\t节点ID：{1}\t父ID：{2}\t深度：{3}\t级：{4}\t前缀：{5}", element.LocalName, thisID, fatherID, depth, serial, prefix);
                 foreach (OpenXmlAttribute attr in element.GetAttributes())
                 {
-                    writeAttrToXML(++attrID, 0, attr.LocalName, attr.Value, prefix, "0", "0");
+                    writeAttrToXML(++attrID, 0, attr.LocalName, attr.Value, prefix, "0", "0", "null");
                     //addRow_WtreeAttrs(attr.LocalName, attr.Value, prefix, "0", "0", 0, depth, serial);
                     //Console.WriteLine("节点名：{0}\t属性：{1}\t属性值：{2}\t节点ID：{3}\t父ID：{4}\t深度；{5}\t级：{6}\t前缀：{7}", element.LocalName, attr.LocalName, attr.Value, thisID, fatherID, depth, serial, prefix);
                 }
@@ -703,7 +728,7 @@ namespace getAll_PPT
         }
 
         public void writeAttrToXML(int ID, int fatherID, String attrName, String value, String Prefix, 
-            String score, String status)
+            String score, String status, String checkType)
         {
             XmlElement element = docAttr.CreateElement("record");
             element.SetAttribute("ID", ID.ToString());
@@ -713,6 +738,7 @@ namespace getAll_PPT
             element.SetAttribute("value", value);            
             element.SetAttribute("score", score);
             element.SetAttribute("status", status);
+            element.SetAttribute("checkType", checkType);
             element.SetAttribute("paper", paperID.ToString());
             element.SetAttribute("userid", stuID.ToString());
             RootAttr.AppendChild(element);
