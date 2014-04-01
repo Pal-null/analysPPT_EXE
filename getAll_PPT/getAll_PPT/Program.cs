@@ -508,7 +508,7 @@ namespace getAll_PPT
                 }
                 else if (element.LocalName == "transition")
                 {
-                    writeAttrToXML(++attrID, 0, "切换效果", element.LocalName, prefix + "/" + element.FirstChild.LocalName + "1/", "0", "0", "0");
+                    writeAttrToXML(++attrID, 0, "切换效果", element.LocalName, prefix + element.FirstChild.LocalName + "1/", "0", "0", "null");
                 }
                 //addRow_Wtree(get_typeName(element.GetType().ToString())+nodeCount, get_typeName(element.GetType().ToString()), fatherID, thisID, prefix, "0", element.InnerText, depth, serial, "0");
                 //Console.WriteLine("节点名：{0}\t节点ID：{1}\t父ID：{2}\t深度：{3}\t级：{4}\t前缀：{5}", element.LocalName, thisID, fatherID, depth, serial, prefix);
