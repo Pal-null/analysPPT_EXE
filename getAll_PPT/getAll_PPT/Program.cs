@@ -31,7 +31,7 @@ namespace getAll_PPT
         #region 全局变量
         private int paperID = 169;
         private int stuID = 0;
-        private string docName = "E:/PPT演示文稿.pptx";
+        private string docName = "E:/PPT标准答案.pptx";
         private string savePath = "E:/analysFile/";
 
         //public static string mySelectQuerytranslateNode = "select * from TRANSLATE_NODE";
@@ -537,7 +537,7 @@ namespace getAll_PPT
             else if (!hasAttributes && !hasChildren)
             {
                 writeNodeToXML(thisID, fatherID, get_typeName(element.GetType().ToString()) + nodeCount, element.InnerText, prefix, "true");
-                writeAttrToXML(+attrID, 0, get_typeName(element.GetType().ToString()), element.InnerText, prefix, "0", "0", "null");
+                writeAttrToXML(++attrID, 0, get_typeName(element.GetType().ToString()), element.InnerText, prefix, "0", "0", "null");
                 //addRow_Wtree(get_typeName(element.GetType().ToString()) + nodeCount, get_typeName(element.GetType().ToString()), fatherID, thisID, prefix, "1", element.InnerText, depth, serial, "0");
                 //addRow_WtreeAttrs(element.LocalName, element.InnerText, prefix, "0", "0", 0, depth, serial);
                 //Console.WriteLine("节点名：{0}\t文字内容：{1}\t节点ID：{2}\t父ID：{3}\t深度：{4}\t级：{5}\t前缀：{5}", element.LocalName, element.InnerText, thisID, fatherID, depth, serial, prefix);
