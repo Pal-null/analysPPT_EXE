@@ -505,7 +505,6 @@ namespace getAll_PPT
                     System.Drawing.Image img = System.Drawing.Image.FromStream(imagePart.GetStream());
                     imageIndex++;
                     String fileName = paperID + "_" + stuID + "_" + rootID + "_image" + imageIndex + ".gif";
-                    Console.WriteLine(savePath + fileName);
                     img.Save(savePath + fileName, System.Drawing.Imaging.ImageFormat.Gif);
                     writeAttrToXML(++attrID, 0, "资源文件", fileName, prefix, "0", "0", "null");
                 }
