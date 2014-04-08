@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
+
 using DocumentFormat.OpenXml.Presentation;
 using A = DocumentFormat.OpenXml.Drawing;
 using DocumentFormat.OpenXml.Packaging;
@@ -28,29 +29,28 @@ namespace getAll_PPT
     public class Analys
     {
         #region 全局变量
-        private static int paperID = 169;
-        private static int stuID = 0;
-        private static string docName = "E:/PPT演示文稿.pptx";
-        private static string savePath = "E:/analysFile/";
+        private int paperID = 169;
+        private int stuID = 0;
+        private string docName = "E:/PPT演示文稿.pptx";
+        private string savePath = "E:/analysFile/";
 
-        //public static string mySelectQueryWtree = "select * from W_TREE where ID = \'-1\'";
-        //public static string mySelectQueryWtreeAttrs = "select * from W_TREE_ATTRS where ID = \'-1\'";
-        //public static string tableName_Wtree = "W_TREE";
-        //public static string tableName_WtreeAttrs = "W_TREE_ATTRS";
-        //public static OracleDataAdapter adapter_Wtree;
-        //public static OracleDataAdapter adapter_WtreeAttrs;
-        //public static OracleCommandBuilder builder_Wtree;
-        //public static OracleCommandBuilder builder_WtreeAttrs;
-        //public static DataSet Wtree;
-        //public static DataSet WtreeAttrs;
+        //public static string mySelectQuerytranslateNode = "select * from TRANSLATE_NODE";
+        //public static string mySelectQuerytranslateAttr = "select * from TRANSLATE_ATTR";
+        //public static string tableName_translateNode = "TRANSLATE_NODE";
+        //public static string tableName_translateAttr = "TRANSLATE_ATTR";
+        //public static OracleDataAdapter adapter_translateNode;
+        //public static OracleDataAdapter adapter_translateAttr;
+        //public static OracleCommandBuilder builder_translateNode;
+        //public static OracleCommandBuilder builder_translateAttr;
+        //public static DataSet translateNode;
+        //public static DataSet translateAttr;
 
         private int rootID = 0;
         private String fileNodeName;
         private String xmlFileName;
         private int attrID = 0;
         private int imageIndex = 0;
-        //public String nodeID;
-        //public String attrID;
+
         //文件名编号
         private int c_slides = 0;
         private int c_notesSlides = 0;
@@ -63,10 +63,12 @@ namespace getAll_PPT
         private int c_viewPr = 0;
         private int c_handoutMaster = 0;
 
-        private static XmlDocument docNode = null;
-        private static XmlElement RootNode = null;
-        private static XmlDocument docAttr = null;
-        private static XmlElement RootAttr = null;
+        private XmlDocument docNode = null;
+        private XmlElement RootNode = null;
+        private XmlDocument docAttr = null;
+        private XmlElement RootAttr = null;
+
+        private OracleConnection oracleConn;
         #endregion
 
         #region 解析接口
@@ -82,20 +84,20 @@ namespace getAll_PPT
             XmlElement totalScore = docAttr.CreateElement("totalScore");
             totalScore.InnerText = "0";
             RootAttr.AppendChild(totalScore);
-            //OracleConnection oracleConn = getOracleConn("localhost", "1521", "orcl", "root", "root");
-            //try
-            //{
-            //    oracleConn.Open();
-            //}
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine("数据库连接打开失败：" + ex.Message);
-            //}
+            oracleConn = getOracleConn("localhost", "1521", "orcl", "root", "root");
+            try
+            {
+                oracleConn.Open();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("数据库连接打开失败：" + ex.Message);
+            }
             //setOralceAdapter(oracleConn);
             //开始解析
             GetResult(docName);
             //updateDataset();
-            //oracleConn.Close();
+            oracleConn.Close();
             docNode.Save("E:/" + paperID.ToString() + "-" + stuID.ToString() + "-" + "node.xml");
             docAttr.Save("E:/" + paperID.ToString() + "-" + stuID.ToString() + "-" + "attr.xml");
         }
@@ -127,7 +129,7 @@ namespace getAll_PPT
                 if (ppt.PresentationPart.NotesMasterPart != null)
                 {
                     notesMasterID = ++rootID;
-                    writeNodeToXML(notesMasterID, 0, "notesMaster", "", "notesMaster/", "false");
+                    writeNodeToXML(notesMasterID, 0, "备注母版", "", "notesMaster/", "false");
                     //addRow_Wtree("备注母版", "notesMaster", 0, notesMasterID, "notesMaster/", "0", "", 1, 3, "0");
                 }
                 notesMasterID = rootID;
@@ -172,7 +174,7 @@ namespace getAll_PPT
                     if (fileNodeName == "sld")
                     {
                         c_slides++;
-                        xmlFileName = "slide" + c_slides;
+                        xmlFileName = "幻灯片" + c_slides;
                         SlidePart p = (SlidePart)part;
                         int CurrentRootID = rootID;
                         if (p.RootElement != null)
@@ -372,7 +374,7 @@ namespace getAll_PPT
                     else if (fileNodeName == "sldMaster")
                     {                 
                         c_slideMasters++;
-                        xmlFileName = "slideMaster" + c_slideMasters;
+                        xmlFileName = "幻灯片母版" + c_slideMasters;
                         SlideMasterPart p = (SlideMasterPart)part;                        
                         if (p.RootElement != null)
                         {
@@ -502,8 +504,8 @@ namespace getAll_PPT
                     ImagePart imagePart = (ImagePart)thisSlide.GetPartById(element.GetFirstChild<BlipFill>().Blip.Embed);
                     System.Drawing.Image img = System.Drawing.Image.FromStream(imagePart.GetStream());
                     imageIndex++;
-                    String fileName = savePath + paperID + stuID + rootID + "image" + imageIndex + ".gif";
-                    img.Save(fileName, System.Drawing.Imaging.ImageFormat.Gif);
+                    String fileName = paperID + stuID + rootID + "image" + imageIndex + ".gif";
+                    img.Save(savePath + fileName, System.Drawing.Imaging.ImageFormat.Gif);
                     writeAttrToXML(++attrID, 0, "资源文件", fileName, prefix, "0", "0", "null");
                 }
                 else if (element.LocalName == "transition")
@@ -535,7 +537,7 @@ namespace getAll_PPT
             else if (!hasAttributes && !hasChildren)
             {
                 writeNodeToXML(thisID, fatherID, get_typeName(element.GetType().ToString()) + nodeCount, element.InnerText, prefix, "true");
-                writeAttrToXML(+attrID, 0, element.LocalName, element.InnerText, prefix, "0", "0", "null");
+                writeAttrToXML(+attrID, 0, get_typeName(element.GetType().ToString()), element.InnerText, prefix, "0", "0", "null");
                 //addRow_Wtree(get_typeName(element.GetType().ToString()) + nodeCount, get_typeName(element.GetType().ToString()), fatherID, thisID, prefix, "1", element.InnerText, depth, serial, "0");
                 //addRow_WtreeAttrs(element.LocalName, element.InnerText, prefix, "0", "0", 0, depth, serial);
                 //Console.WriteLine("节点名：{0}\t文字内容：{1}\t节点ID：{2}\t父ID：{3}\t深度：{4}\t级：{5}\t前缀：{5}", element.LocalName, element.InnerText, thisID, fatherID, depth, serial, prefix);
@@ -553,7 +555,7 @@ namespace getAll_PPT
                 //Console.WriteLine("节点名：{0}\t节点ID：{1}\t父ID：{2}\t深度：{3}\t级：{4}\t前缀：{5}", element.LocalName, thisID, fatherID, depth, serial, prefix);
                 foreach (OpenXmlAttribute attr in element.GetAttributes())
                 {
-                    writeAttrToXML(++attrID, 0, attr.LocalName, attr.Value, prefix, "0", "0", "null");
+                    writeAttrToXML(++attrID, 0, get_attrChinese(element.GetType().ToString(), attr.LocalName), attr.Value, prefix, "0", "0", "null");
                     //addRow_WtreeAttrs(attr.LocalName, attr.Value, prefix, "0", "0", 0, depth, serial);
                     //Console.WriteLine("节点名：{0}\t属性：{1}\t属性值：{2}\t节点ID：{3}\t父ID：{4}\t深度：{5}\t级：{6}\t前缀：{7}", element.LocalName, attr.LocalName, attr.Value, thisID, fatherID, depth, serial, prefix);
                 }
@@ -584,7 +586,7 @@ namespace getAll_PPT
                 //Console.WriteLine("节点名：{0}\t节点ID：{1}\t父ID：{2}\t深度：{3}\t级：{4}\t前缀：{5}", element.LocalName, thisID, fatherID, depth, serial, prefix);
                 foreach (OpenXmlAttribute attr in element.GetAttributes())
                 {
-                    writeAttrToXML(++attrID, 0, attr.LocalName, attr.Value, prefix, "0", "0", "null");
+                    writeAttrToXML(++attrID, 0, get_attrChinese(element.GetType().ToString(), attr.LocalName), attr.Value, prefix, "0", "0", "null");
                     //addRow_WtreeAttrs(attr.LocalName, attr.Value, prefix, "0", "0", 0, depth, serial);
                     //Console.WriteLine("节点名：{0}\t属性：{1}\t属性值：{2}\t节点ID：{3}\t父ID：{4}\t深度；{5}\t级：{6}\t前缀：{7}", element.LocalName, attr.LocalName, attr.Value, thisID, fatherID, depth, serial, prefix);
                 }
@@ -593,37 +595,33 @@ namespace getAll_PPT
         }
         #endregion
 
-        //#region 数据库操作部分
-        //public OracleConnection getOracleConn(String Host, String Port, String serviceName, String UserID, String Password)
-        //{
-        //    OracleConnectionStringBuilder OcnnStrB = new OracleConnectionStringBuilder();
-        //    OcnnStrB.DataSource = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=" + Host + ") (PORT=" + Port + ")))(CONNECT_DATA=(SERVICE_NAME=" + serviceName + ")))";
-        //    OcnnStrB.UserID = UserID;
-        //    OcnnStrB.Password = Password;
-        //    OracleConnection myCnn = new OracleConnection(OcnnStrB.ConnectionString);
-        //    return myCnn;
-        //}
+        #region 数据库操作部分
+        public OracleConnection getOracleConn(String Host, String Port, String serviceName, String UserID, String Password)
+        {
+            OracleConnectionStringBuilder OcnnStrB = new OracleConnectionStringBuilder();
+            OcnnStrB.DataSource = "(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=" + Host + ") (PORT=" + Port + ")))(CONNECT_DATA=(SERVICE_NAME=" + serviceName + ")))";
+            OcnnStrB.UserID = UserID;
+            OcnnStrB.Password = Password;
+            OracleConnection myCnn = new OracleConnection(OcnnStrB.ConnectionString);
+            return myCnn;
+        }
 
         //public void setOralceAdapter(OracleConnection conn)
         //{
         //    try
         //    {
-        //        //adapter_fileList = new OracleDataAdapter(mySelectQueryFileList, conn);
-        //        adapter_Wtree = new OracleDataAdapter(mySelectQueryWtree, conn);
-        //        adapter_WtreeAttrs = new OracleDataAdapter(mySelectQueryWtreeAttrs, conn);
-        //        //builder_fileList = new OracleCommandBuilder(adapter_fileList);
-        //        builder_Wtree = new OracleCommandBuilder(adapter_Wtree);
-        //        builder_WtreeAttrs = new OracleCommandBuilder(adapter_WtreeAttrs);
-        //        /*fileList = new DataSet();*/
-        //        Wtree = new DataSet();
-        //        WtreeAttrs = new DataSet();
-        //        /*adapter_fileList.Fill(fileList, tableName_fileList);*/
-        //        adapter_Wtree.Fill(Wtree, tableName_Wtree);
-        //        adapter_WtreeAttrs.Fill(WtreeAttrs, tableName_WtreeAttrs);
+        //        adapter_translateNode = new OracleDataAdapter(mySelectQuerytranslateNode, conn);
+        //        adapter_translateAttr = new OracleDataAdapter(mySelectQuerytranslateAttr, conn);
+        //        builder_translateNode = new OracleCommandBuilder(adapter_translateNode);
+        //        builder_translateAttr = new OracleCommandBuilder(adapter_translateAttr);
+        //        translateNode = new DataSet();
+        //        translateAttr = new DataSet();
+        //        adapter_translateNode.Fill(translateNode, tableName_translateNode);
+        //        adapter_translateAttr.Fill(translateAttr, tableName_translateAttr);
         //    }
         //    catch (Exception e)
         //    {
-        //        Console.WriteLine("设置数据库失败：" + e.Message);
+        //        Console.WriteLine("设置数据库适配器失败：" + e.Message);
         //    }
         //}
 
@@ -631,8 +629,8 @@ namespace getAll_PPT
         //{
         //    try
         //    {
-        //        adapter_Wtree.Update(Wtree, tableName_Wtree);
-        //        adapter_WtreeAttrs.Update(WtreeAttrs, tableName_WtreeAttrs);
+        //        //adapter_Wtree.Update(Wtree, tableName_Wtree);
+        //        //adapter_WtreeAttrs.Update(WtreeAttrs, tableName_WtreeAttrs);
         //    }
         //    catch (Exception e)
         //    {
@@ -692,23 +690,59 @@ namespace getAll_PPT
         //        Console.Write("节点属性 表格插入新数据出错： ", e.ToString());
         //    }
         //}
-        //#endregion
+        #endregion
 
-        #region 获取英文名
+        #region 获取中文翻译
         String get_typeName(String elementType)
         {
             String[] arry = elementType.Split('.');
-            String str = arry[arry.Length - 1];//取Document.XX.XX.RunProperties的RunProperties
-            String result = "";
-            foreach (char c in str)//变成"Run Properties"
+            String className = arry[arry.Length - 1];
+            String nameSpace = arry[0];
+            int i;
+            for(i = 1; i < arry.Length-1; i++)
             {
-                if (c >= 'a' && c <= 'z')//Char.IsLetter(c)小写字母c>='a' && c<='z'
-                    result += c;
-                else
-                    result += " " + c;
+                nameSpace += "." + arry[i];
             }
-            result = result.Substring(0, 1) == " " ? result.Substring(1, result.Length - 1) : result;
-            return result;
+            OracleCommand com = oracleConn.CreateCommand();
+            com.CommandText = "select TRANSLATION from TRANSLATE_NODE where NAMESPACE=\'" + nameSpace +
+                "\' and CLASS_NAME=\'" + className + "\'";
+            OracleDataReader odr = com.ExecuteReader();
+            if (odr.Read())
+            {
+                String odrString = odr.GetString(0).ToString();
+                odr.Close();
+                return odrString;
+            }
+            else
+            {
+                return className;
+            }
+        }
+
+        String get_attrChinese(String elementType, String localName)
+        {
+            String[] arry = elementType.Split('.');
+            String className = arry[arry.Length - 1];
+            String nameSpace = arry[0];
+            int i;
+            for (i = 1; i < arry.Length - 1; i++)
+            {
+                nameSpace += "." + arry[i];
+            }
+            OracleCommand com = oracleConn.CreateCommand();
+            com.CommandText = "select TRANSLATION from TRANSLATE_ATTR where NAMESPACE=\'" + nameSpace +
+                "\' and CLASS_NAME=\'" + className + "\' and ATTR_NAME= '" + localName + "\'";
+            OracleDataReader odr = com.ExecuteReader();
+            if (odr.Read())
+            {
+                String odrString = odr.GetString(0).ToString();
+                odr.Close();
+                return odrString;
+            }
+            else
+            {
+                return localName;
+            }
         }
         #endregion
 
